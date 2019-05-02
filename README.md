@@ -31,6 +31,14 @@ Day of week is more important than date of the year (apart from several holidays
 
 This approach has provided a logarithmic relationship between price and bookings, which is much more in-line with expectations. An added benefit of this process is the model fit - in the old linear approach our adjusted r-square was ~55.7% including all predictors. In the new approach, adjusted r-square jumped to 67% with just log(normalized price) as a predictor. Adding other predictors got us up to 82.2%
 
+**Non-normalized Price**
+
+![price](https://github.com/cmeade001/imgv2/blob/master/price.png?raw=true)
+
+**Normalized Price**
+
+![price-normal](https://github.com/cmeade001/imgv2/blob/master/price-normal.png?raw=true)
+
 Finally, with price normalized the final model coefficient for price : bookings is negative, which is a key enhancement. In V1, I had to make an arbitrary manual adjustmenet to the price coefficient in order to use it to compute the different profit scenarios (result to bookings from changing price). In the new model, it is appropriate to use the model coefficient for price as an input to the final profit calculation, without making any manual transformations.
 
 **Final Model**
@@ -56,6 +64,8 @@ More details as follow:
 ### Facebook Prophet
 * I also fit a model using Facebook Prophet, just to try it out. It's actually a really cool function, though from reading the documentation it seems like it's not quite as flexible as the forecast() package in r. The pros relative to the forecast package however are the model object is actually a lot more intuitive in FB prophet - you can explore it and actually get a pretty good understanding of the seasonalities and trends in the data. In my case, the model easily picked out the annual and weekly cyclical seasonality, which is pretty cool. Not unlike similar functionality in forecast() but a bit more plug-and-play - basically it seems like the Prophet package does more work with less user input and understanding. 
 * Our regression forecast on average is 30% closer to actuals than the Prophet forecast, and the +/-2 SD distance is smaller as well. However, because we just did a cursory overview of Prophet it's possible more tuning could get the two approaches closer in performance. For instance, much of the overprediction in the FB model could be resolved by enforcing min/max constraints as we did in the regression forecast, and this alone could make the performance much better. Worth saving this insight for a rainy day, since it's possible the predictive capability of the regression forecast will be much reduced for future dates.
+
+![forecast-compare](https://github.com/cmeade001/imgv2/blob/master/forecast-compare.png?raw=true)
 
 ### Forecast Conclusions
 A couple of other callouts for forecasting with regression. The main constraing with this approach is that regression models require contemporary observations of predictors in order to provide a prediction. This means that any feature in your model which you can't know in advance is going to limit your ability to forecast with your model. In our case, the final model fromt he V2 project used mostly features which can be known in advance - price, seasonality, holidays, etc. However, some features couldn't - temperature, snow accumulation, web visits, among others. The way I got around this was to produce univariate time-series forecasts to fabricate future observations of these attributes, and then add the forecasted values to the data frame used for the final regression forecast of rooms booked. In the end, forecasting with regression got our mean VtF for a 2018 cross-validation exercise to +/-8%, vs. +/-40% in V1 - a pretty significant lift. But, we won't know until the end of 2019 whether using forecasted predictors as described above led to decreased forecast performance.
@@ -138,7 +148,13 @@ for(i in 1:365) {
 ### Conclusions
 While the conclusions from the model output are heavily influenced by the profit formula inputs, the outputs are very simple to understand. The core summary is that over the course of 2019, this exercise resulted in a recommendation to increase price by an average of 19% in order to drive an extra $575k in profit. This would result in -5% fewer total bookings, but again coems with a 15% increase in profit.
 
+![profit-table](https://github.com/cmeade001/imgv2/blob/master/conclusions-table.png?raw=true)
+![conclusions-profit](https://github.com/cmeade001/imgv2/blob/master/conclusions-profit.png?raw=true)
+![conclusions-bookings](https://github.com/cmeade001/imgv2/blob/master/Conclusions-Bookings.png?raw=true)
+
 One feature of V2 I'm particularly pleased with is that the model no longer recommends to increase profit for every day of the year. The log scale of price : bookings coupled with more nuanced profit formula inputs resulted in a much more realistic set of daily pricing recommendations. This opens up one additional use-case for the model apart from just aiding in the customer's bi-annual price-setting cadence - that is, it can actually provide the customer a recommendation for the magnitude of promotions which would yield additional bookings, and forecast the results. So it can now be used in two important decision processes for the customer.
+
+![conclusions-table](https://github.com/cmeade001/imgv2/blob/master/conclusions-daily-graph.png?raw=true)
 
 ## References
 * Hyndman, R.J., & Athanasopoulos, G. (2018) Forecasting: principles and practice, 2nd edition, OTexts: Melbourne, Australia. OTexts.com/fpp2. Accessed on 3/9/18
