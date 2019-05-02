@@ -33,6 +33,16 @@ This approach has provided a logarithmic relationship between price and bookings
 
 Finally, with price normalized the final model coefficient for price : bookings is negative, which is a key enhancement. In V1, I had to make an arbitrary manual adjustmenet to the price coefficient in order to use it to compute the different profit scenarios (result to bookings from changing price). In the new model, it is appropriate to use the model coefficient for price as an input to the final profit calculation, without making any manual transformations.
 
+**Final Model**
+```
+model04<-lm(bkng~log(pactadj)+ssn:tmax+ssn:tmin+ssn:prcp+ssn:hisnwdp+wkd:prcp:tmax+jan:tmax+feb+mar:tmax+apr+may:tmax+jun:fri+jun:sat+jul:fri+jul:sat+aug:fri+aug:sat+sep+oct+nov+dec:sat+dec:fri+sun+mon+tue+wed+thu+ishol+hol3+holwknd+pv45+pv60+imp45+imp714+lwsnwdp, data=data[1:1460,])
+
+#Final Model Outputs
+summary(model04)
+plot(model04)
+CV(model04)
+```
+
 ## Forecasting Approach
 In V2, you'll find R code from investigating two primary packages for forecasting - FPP2, built by Rob Hyndman. And Prophet, build by Facebook. I found both to be very useful and have pros and cons - Prophet was a little more user-friendly and didn't require as much knowledge, but in my limited exploration also seemed slightly less flexible. While FPP2 is a little trickier to use, it also allowed me to do two key things I couldn't with Prophet: implement upper and lower limits on the forecast (eg: can't book more than 90 rooms or fewer than 0). As well, I was able to use my regression model to forecast with FPP2, and it wasn't clear whether Prophet allows forecasting with regression.
 
@@ -62,6 +72,68 @@ The thing I like best about the new automated approach to profit-maximization si
 1. Profit inputs (like fixed costs, variable labor costs, upsell opportunities for guests, etc.)
 2. Model coefficients - so if we continue improving the model or adding granularity, the idea is to return the latest coefficient for price rather than hardcoding (though since it's pulling from a model matrix object if new features get added it'll break)
 3. Range of output values - so if we wanted to remove the +/-40% constraint on price changes as we begin to trust the model more, it's 1 line of code to change.
+
+**Loop**
+```
+#Pass relevant rows (2019 - rows 1461:1825) and columns (ssnidx, pactadj, bkng) to a new data frame
+
+which(colnames(data)=="ssnidx")
+which(colnames(data)=="pactadj")
+which(colnames(data)=="bkng")
+
+profit<-data[1461:1825,c(1,7,70,71)]
+
+#Profit equation inputs:
+a<- -3392.57 #Theoretical fixed daily overhead for the hotel
+b<- -0.05 #Adjustment to forecast bookings based on cross-validation results
+c<- -50 #Nightly cost to service occupied room
+d<- 50 #Nightly per-adult upsell
+e<- 2.08 #Avg adults per room booked
+f<- -31.85348098 #Log(pactadj) estimate from regression model
+g<-93 #Max capacity (+3 to avoid errors from 0 or neg numbers)
+
+#Profit max data frame to append rows to:
+profitmax<-data.frame(
+  "Date"="",
+  "Baseline Bookings"="",
+  "Baseline Price"="",
+  "Baseline Profit"="",
+  "Profit Max Bookings"="",
+  "Profit Max Price"="",
+  "Profit Max Profit"="",
+  stringsAsFactors=FALSE)
+
+#Create marginal returns steps data frame
+scenarios<-data.frame("step"=1:81)
+scenarios$mult<-seq(0.6,1.4,by=0.01)
+scenarios$pactadj<-""
+scenarios$pact<-""
+scenarios$bkng<-""
+scenarios$profit<-""
+
+#For loop to run all 365 days
+
+for(i in 1:365) {
+  row<-i
+  
+  date<-as.character(profit[row,1,])
+  bkng<-profit[row,2]*(1+b)
+  ssnidx<-profit[row,3]
+  pactadj<-profit[row,4]
+  scenarios$pactadj<-pactadj*scenarios$mult
+  scenarios$pact<-ssnidx*scenarios$pactadj
+  scenarios$bkng<-((log(scenarios$pactadj)-log(pactadj))*f)+bkng
+  scenarios$profit<-a+(scenarios$pact*scenarios$bkng)+(scenarios$bkng*d*e)+((g-scenarios$bkng)*h)+(scenarios$bkng*c)
+  max<-which.max(scenarios$profit)
+  profitmax[row,]<-c(date,
+                     bkng,
+                     scenarios[41,4],
+                     scenarios[41,6],
+                     scenarios[max,5],
+                     scenarios[max,4],
+                     scenarios[max,6])
+}
+```
 
 ### Conclusions
 While the conclusions from the model output are heavily influenced by the profit formula inputs, the outputs are very simple to understand. The core summary is that over the course of 2019, this exercise resulted in a recommendation to increase price by an average of 19% in order to drive an extra $575k in profit. This would result in -5% fewer total bookings, but again coems with a 15% increase in profit.
