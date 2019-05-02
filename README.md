@@ -69,7 +69,8 @@ While the conclusions from the model output are heavily influenced by the profit
 One feature of V2 I'm particularly pleased with is that the model no longer recommends to increase profit for every day of the year. The log scale of price : bookings coupled with more nuanced profit formula inputs resulted in a much more realistic set of daily pricing recommendations. This opens up one additional use-case for the model apart from just aiding in the customer's bi-annual price-setting cadence - that is, it can actually provide the customer a recommendation for the magnitude of promotions which would yield additional bookings, and forecast the results. So it can now be used in two important decision processes for the customer.
 
 ## References
-Hyndman, R.J., & Athanasopoulos, G. (2018) Forecasting: principles and practice, 2nd edition, OTexts: Melbourne, Australia. OTexts.com/fpp2. Accessed on 3/9/18
-Rob Hyndman (2018). fpp2: Data for "Forecasting: Principles and Practice" (2nd Edition). R package version 2.3.  https://CRAN.R-project.org/package=fpp2
-Davis, G. B. (1982). Strategies for information requirements determination. IBM Systems Journal, 21(1). Retrieved March 09, 2019.
-R Core Team (2018). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
+* Hyndman, R.J., & Athanasopoulos, G. (2018) Forecasting: principles and practice, 2nd edition, OTexts: Melbourne, Australia. OTexts.com/fpp2. Accessed on 3/9/18
+* Rob Hyndman (2018). fpp2: Data for "Forecasting: Principles and Practice" (2nd Edition). R package version 2.3.  https://CRAN.R-project.org/package=fpp2
+* R Core Team (2018). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL https://www.R-project.org/.
+* NOAA’s self-service tools for weather data by zip code was MUCH better than I expected and had heard it would be. Assuming it’s best for US geos since it’s a federal agency, but within US makes things super easy: https://www.climate.gov/maps-data/dataset/past-weather-zip-code-data-table
+
